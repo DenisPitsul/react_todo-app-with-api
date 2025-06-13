@@ -13,7 +13,9 @@ export const useTodoController = () => {
   );
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [isAddTodoFormFocused, setIsAddTodoFormFocused] = useState(false);
-  const [todoToDeleteIds, setTodoToDeleteIds] = useState<number[]>([]);
+  const [todoToDeleteIds, setTodoToDeleteIds] = useState<Todo['id'][]>([]);
+  const [todoToUpdateIds, setTodoToUpdateIds] = useState<Todo['id'][]>([]);
+  const [editingTodoId, setEditingTodoId] = useState<Todo['id'] | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(
     StatusFilter.All,
   );
@@ -58,7 +60,7 @@ export const useTodoController = () => {
     return createTodoPromise;
   };
 
-  const onTodoDelete = (todoId: number) => {
+  const onTodoDelete = (todoId: Todo['id']) => {
     setTodoToDeleteIds(current => [...current, todoId]);
 
     todoService
@@ -72,8 +74,37 @@ export const useTodoController = () => {
         setErrorMessage(ErrorMessage.OnDelete);
       })
       .finally(() => {
-        setTodoToDeleteIds(current => current.filter(id => id === todoId));
+        setTodoToDeleteIds(current => current.filter(id => id !== todoId));
         setIsAddTodoFormFocused(true);
+      });
+  };
+
+  const onTodoUpdate = (
+    todoId: Todo['id'],
+    todoDataToUpdate: Partial<Todo>,
+    isTitleChange = false,
+  ) => {
+    if (isTitleChange) {
+      setEditingTodoId(todoId);
+    }
+
+    setTodoToUpdateIds(current => [...current, todoId]);
+
+    return todoService
+      .updateTodo(todoId, todoDataToUpdate)
+      .then(updatedTodo => {
+        setTodos(currentTodos => {
+          return currentTodos.map(todo =>
+            todo.id === updatedTodo.id ? updatedTodo : todo,
+          );
+        });
+      })
+      .catch(error => {
+        setErrorMessage(ErrorMessage.onUpdate);
+        throw error;
+      })
+      .finally(() => {
+        setTodoToUpdateIds(current => current.filter(id => id !== todoId));
       });
   };
 
@@ -133,8 +164,12 @@ export const useTodoController = () => {
     isAddTodoFormFocused,
     setIsAddTodoFormFocused,
     onTodoDelete,
-    onClearCompletedTodos,
     todoToDeleteIds,
+    onClearCompletedTodos,
+    todoToUpdateIds,
+    onTodoUpdate,
+    editingTodoId,
+    setEditingTodoId,
     statusFilter,
     setStatusFilter,
     filteredTodos,

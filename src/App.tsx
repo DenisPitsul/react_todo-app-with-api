@@ -20,8 +20,12 @@ export const App: React.FC = () => {
     isAddTodoFormFocused,
     setIsAddTodoFormFocused,
     onTodoDelete,
-    onClearCompletedTodos,
     todoToDeleteIds,
+    onClearCompletedTodos,
+    todoToUpdateIds,
+    onTodoUpdate,
+    editingTodoId,
+    setEditingTodoId,
     statusFilter,
     setStatusFilter,
     filteredTodos,
@@ -52,6 +56,10 @@ export const App: React.FC = () => {
               tempTodo={tempTodo}
               onTodoDelete={onTodoDelete}
               todoToDeleteIds={todoToDeleteIds}
+              onTodoUpdate={onTodoUpdate}
+              todoToUpdateIds={todoToUpdateIds}
+              editingTodoId={editingTodoId}
+              setEditingTodoId={setEditingTodoId}
             />
 
             <Footer

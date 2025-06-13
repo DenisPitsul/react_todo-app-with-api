@@ -6,8 +6,12 @@ import { TodoItem } from '../TodoItem';
 type Props = {
   todos: Todo[];
   tempTodo: Todo | null;
-  onTodoDelete: (todoId: number) => void;
-  todoToDeleteIds: number[];
+  onTodoDelete: (todoId: Todo['id']) => void;
+  todoToDeleteIds: Todo['id'][];
+  onTodoUpdate: (todoId: Todo['id'], todoData: Partial<Todo>) => Promise<void>;
+  todoToUpdateIds: Todo['id'][];
+  editingTodoId: Todo['id'] | null;
+  setEditingTodoId: (todoId: Todo['id'] | null) => void;
 };
 
 export const TodoList: React.FC<Props> = ({
@@ -15,6 +19,10 @@ export const TodoList: React.FC<Props> = ({
   tempTodo,
   onTodoDelete,
   todoToDeleteIds,
+  onTodoUpdate,
+  todoToUpdateIds,
+  editingTodoId,
+  setEditingTodoId,
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -24,6 +32,10 @@ export const TodoList: React.FC<Props> = ({
           todo={todo}
           onTodoDelete={onTodoDelete}
           todoToDeleteIds={todoToDeleteIds}
+          onTodoUpdate={onTodoUpdate}
+          todoToUpdateIds={todoToUpdateIds}
+          editingTodoId={editingTodoId}
+          setEditingTodoId={setEditingTodoId}
         />
       ))}
       {tempTodo && <TodoItem todo={tempTodo} isTempTodo={true} />}
