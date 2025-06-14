@@ -1,28 +1,39 @@
 import React from 'react';
 import { AddTodoForm } from '../AddTodoForm';
 import { ErrorMessage } from '../../enums/errorMessage';
+import cn from 'classnames';
 
 type Props = {
+  isThereAlLeastOneTodo: boolean;
   setErrorMessage: (errorMessage: ErrorMessage) => void;
   onAddTodo: (todoTitle: string) => Promise<void>;
   isAddTodoFormFocused: boolean;
   setIsAddTodoFormFocused: (isFocused: boolean) => void;
+  isAlLeastOneTodoLoading: boolean;
+  isAllTodosCompleted: boolean;
+  onToggleTodos: () => void;
 };
 
 export const Header: React.FC<Props> = ({
+  isThereAlLeastOneTodo,
   setErrorMessage,
   onAddTodo,
   isAddTodoFormFocused,
   setIsAddTodoFormFocused,
+  isAlLeastOneTodoLoading,
+  isAllTodosCompleted,
+  onToggleTodos,
 }) => {
   return (
     <header className="todoapp__header">
-      {/* this button should have `active` class only if all todos are completed */}
-      <button
-        type="button"
-        className="todoapp__toggle-all active"
-        data-cy="ToggleAllButton"
-      />
+      {isThereAlLeastOneTodo && !isAlLeastOneTodoLoading && (
+        <button
+          type="button"
+          className={cn('todoapp__toggle-all', { active: isAllTodosCompleted })}
+          data-cy="ToggleAllButton"
+          onClick={onToggleTodos}
+        />
+      )}
 
       <AddTodoForm
         setErrorMessage={setErrorMessage}

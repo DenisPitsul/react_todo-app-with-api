@@ -11,21 +11,23 @@ import { useTodoController } from './hooks/useTodoController';
 
 export const App: React.FC = () => {
   const {
-    todos,
+    isThereAlLeastOneTodo,
     isTodosLoading,
     errorMessage,
     setErrorMessage,
     tempTodo,
+    isTodoLoading,
+    isAlLeastOneTodoLoading,
+    isAllTodosCompleted,
     onAddTodo,
     isAddTodoFormFocused,
     setIsAddTodoFormFocused,
     onTodoDelete,
-    todoToDeleteIds,
     onClearCompletedTodos,
-    todoToUpdateIds,
     onTodoUpdate,
     editingTodoId,
     setEditingTodoId,
+    onToggleTodos,
     statusFilter,
     setStatusFilter,
     filteredTodos,
@@ -43,21 +45,24 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
+          isThereAlLeastOneTodo={isThereAlLeastOneTodo}
           setErrorMessage={setErrorMessage}
           onAddTodo={onAddTodo}
           isAddTodoFormFocused={isAddTodoFormFocused}
           setIsAddTodoFormFocused={setIsAddTodoFormFocused}
+          isAlLeastOneTodoLoading={isAlLeastOneTodoLoading}
+          isAllTodosCompleted={isAllTodosCompleted}
+          onToggleTodos={onToggleTodos}
         />
 
-        {!isTodosLoading && Boolean(todos.length) && (
+        {!isTodosLoading && isThereAlLeastOneTodo && (
           <>
             <TodoList
               todos={filteredTodos}
               tempTodo={tempTodo}
+              isTodoLoading={isTodoLoading}
               onTodoDelete={onTodoDelete}
-              todoToDeleteIds={todoToDeleteIds}
               onTodoUpdate={onTodoUpdate}
-              todoToUpdateIds={todoToUpdateIds}
               editingTodoId={editingTodoId}
               setEditingTodoId={setEditingTodoId}
             />

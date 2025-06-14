@@ -6,10 +6,9 @@ import { TodoItem } from '../TodoItem';
 type Props = {
   todos: Todo[];
   tempTodo: Todo | null;
+  isTodoLoading: (todoId: Todo['id']) => boolean;
   onTodoDelete: (todoId: Todo['id']) => void;
-  todoToDeleteIds: Todo['id'][];
   onTodoUpdate: (todoId: Todo['id'], todoData: Partial<Todo>) => Promise<void>;
-  todoToUpdateIds: Todo['id'][];
   editingTodoId: Todo['id'] | null;
   setEditingTodoId: (todoId: Todo['id'] | null) => void;
 };
@@ -17,10 +16,9 @@ type Props = {
 export const TodoList: React.FC<Props> = ({
   todos,
   tempTodo,
+  isTodoLoading,
   onTodoDelete,
-  todoToDeleteIds,
   onTodoUpdate,
-  todoToUpdateIds,
   editingTodoId,
   setEditingTodoId,
 }) => {
@@ -30,15 +28,20 @@ export const TodoList: React.FC<Props> = ({
         <TodoItem
           key={todo.id}
           todo={todo}
+          isTodoLoading={isTodoLoading}
           onTodoDelete={onTodoDelete}
-          todoToDeleteIds={todoToDeleteIds}
           onTodoUpdate={onTodoUpdate}
-          todoToUpdateIds={todoToUpdateIds}
           editingTodoId={editingTodoId}
           setEditingTodoId={setEditingTodoId}
         />
       ))}
-      {tempTodo && <TodoItem todo={tempTodo} isTempTodo={true} />}
+      {tempTodo && (
+        <TodoItem
+          todo={tempTodo}
+          isTodoLoading={isTodoLoading}
+          isTempTodo={true}
+        />
+      )}
     </section>
   );
 };

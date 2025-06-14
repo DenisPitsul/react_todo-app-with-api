@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import { Todo } from '../../types/todo/Todo';
 
@@ -9,22 +9,20 @@ const TODO_STATUS_CHECKBOX_CLASSNAME = 'todo__status';
 
 type Props = {
   todo: Todo;
+  isTodoLoading: (todoId: Todo['id']) => boolean;
   isTempTodo?: boolean;
   onTodoDelete?: (todoId: Todo['id']) => void;
-  todoToDeleteIds?: Todo['id'][];
   onTodoUpdate?: (todoId: Todo['id'], todoData: Partial<Todo>) => Promise<void>;
-  todoToUpdateIds?: Todo['id'][];
   editingTodoId?: Todo['id'] | null;
   setEditingTodoId?: (todoId: Todo['id'] | null) => void;
 };
 
 export const TodoItem: React.FC<Props> = ({
   todo,
+  isTodoLoading,
   isTempTodo = false,
   onTodoDelete,
-  todoToDeleteIds,
   onTodoUpdate,
-  todoToUpdateIds,
   editingTodoId,
   setEditingTodoId,
 }) => {
@@ -32,31 +30,14 @@ export const TodoItem: React.FC<Props> = ({
   const editingTitleFormRef = useRef<HTMLFormElement>(null);
   const editingTitleInputRef = useRef<HTMLInputElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (editingTodoId === todo.id) {
-      setEditingTitle(todo.title);
-      requestAnimationFrame(() => {
-        editingTitleInputRef.current?.focus();
-      });
+      setEditingTitle(prevTitleValue =>
+        prevTitleValue === todo.title ? todo.title : prevTitleValue,
+      );
+      editingTitleInputRef.current?.focus();
     }
   }, [editingTodoId, todo.id, todo.title]);
-
-  useLayoutEffect(() => {
-    if (editingTodoId === todo.id) {
-      setEditingTitle(todo.title);
-      requestAnimationFrame(() => {
-        editingTitleInputRef.current?.focus();
-      });
-    }
-  }, [editingTodoId, todo.id, todo.title]);
-
-  const isLoaderVisible = (todoId: number) => {
-    return (
-      isTempTodo ||
-      todoToDeleteIds?.includes(todoId) ||
-      todoToUpdateIds?.includes(todoId)
-    );
-  };
 
   const handleChangeTodoStatus = () => {
     if (onTodoUpdate) {
@@ -193,7 +174,7 @@ export const TodoItem: React.FC<Props> = ({
       <div
         data-cy="TodoLoader"
         className={cn('modal', 'overlay', {
-          'is-active': isLoaderVisible(todo.id),
+          'is-active': isTodoLoading?.(todo.id),
         })}
       >
         <div className="modal-background has-background-white-ter" />
