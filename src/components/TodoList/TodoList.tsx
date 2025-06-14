@@ -1,7 +1,9 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
 import React from 'react';
 import { Todo } from '../../types/todo/Todo';
 import { TodoItem } from '../TodoItem';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
+
+const CSS_TRANSITION_TIMEOUT = 300;
 
 type Props = {
   todos: Todo[];
@@ -24,24 +26,37 @@ export const TodoList: React.FC<Props> = ({
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
-      {todos.map(todo => (
-        <TodoItem
-          key={todo.id}
-          todo={todo}
-          isTodoLoading={isTodoLoading}
-          onTodoDelete={onTodoDelete}
-          onTodoUpdate={onTodoUpdate}
-          editingTodoId={editingTodoId}
-          setEditingTodoId={setEditingTodoId}
-        />
-      ))}
-      {tempTodo && (
-        <TodoItem
-          todo={tempTodo}
-          isTodoLoading={isTodoLoading}
-          isTempTodo={true}
-        />
-      )}
+      <TransitionGroup>
+        {todos.map(todo => (
+          <CSSTransition
+            key={todo.id}
+            timeout={CSS_TRANSITION_TIMEOUT}
+            classNames="item"
+          >
+            <TodoItem
+              todo={todo}
+              isTodoLoading={isTodoLoading}
+              onTodoDelete={onTodoDelete}
+              onTodoUpdate={onTodoUpdate}
+              editingTodoId={editingTodoId}
+              setEditingTodoId={setEditingTodoId}
+            />
+          </CSSTransition>
+        ))}
+        {tempTodo && (
+          <CSSTransition
+            key={0}
+            timeout={CSS_TRANSITION_TIMEOUT}
+            classNames="temp-item"
+          >
+            <TodoItem
+              todo={tempTodo}
+              isTodoLoading={isTodoLoading}
+              isTempTodo={true}
+            />
+          </CSSTransition>
+        )}
+      </TransitionGroup>
     </section>
   );
 };

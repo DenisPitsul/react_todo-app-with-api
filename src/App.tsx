@@ -55,26 +55,24 @@ export const App: React.FC = () => {
           onToggleTodos={onToggleTodos}
         />
 
-        {!isTodosLoading && isThereAlLeastOneTodo && (
-          <>
-            <TodoList
-              todos={filteredTodos}
-              tempTodo={tempTodo}
-              isTodoLoading={isTodoLoading}
-              onTodoDelete={onTodoDelete}
-              onTodoUpdate={onTodoUpdate}
-              editingTodoId={editingTodoId}
-              setEditingTodoId={setEditingTodoId}
-            />
+        <TodoList
+          todos={filteredTodos}
+          tempTodo={tempTodo}
+          isTodoLoading={isTodoLoading}
+          onTodoDelete={onTodoDelete}
+          onTodoUpdate={onTodoUpdate}
+          editingTodoId={editingTodoId}
+          setEditingTodoId={setEditingTodoId}
+        />
 
-            <Footer
-              activeTodosCount={activeItemsCount}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              isThereAtLeastOneCompletedTodo={isThereAtLeastOneCompletedTodo}
-              onClearCompletedTodos={onClearCompletedTodos}
-            />
-          </>
+        {!isTodosLoading && isThereAlLeastOneTodo && (
+          <Footer
+            activeTodosCount={activeItemsCount}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            isThereAtLeastOneCompletedTodo={isThereAtLeastOneCompletedTodo}
+            onClearCompletedTodos={onClearCompletedTodos}
+          />
         )}
       </div>
 
