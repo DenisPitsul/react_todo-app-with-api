@@ -12,9 +12,15 @@ type Props = {
   isTodoLoading: (todoId: Todo['id']) => boolean;
   isTempTodo?: boolean;
   onTodoDelete?: (todoId: Todo['id']) => void;
-  onTodoUpdate?: (todoId: Todo['id'], todoData: Partial<Todo>) => Promise<void>;
+  onTodoUpdate?: (
+    todoId: Todo['id'],
+    todoData: Partial<Todo>,
+    isTitleChange?: boolean,
+  ) => Promise<void>;
   editingTodoId?: Todo['id'] | null;
   setEditingTodoId?: (todoId: Todo['id'] | null) => void;
+  isEditTodoFormFocused?: boolean;
+  setIsEditTodoFormFocused?: (isFocused: boolean) => void;
 };
 
 export const TodoItem: React.FC<Props> = ({
@@ -25,6 +31,8 @@ export const TodoItem: React.FC<Props> = ({
   onTodoUpdate,
   editingTodoId,
   setEditingTodoId,
+  isEditTodoFormFocused,
+  setIsEditTodoFormFocused,
 }) => {
   const [editingTitle, setEditingTitle] = useState(todo.title);
   const editingTitleFormRef = useRef<HTMLFormElement>(null);
@@ -38,6 +46,13 @@ export const TodoItem: React.FC<Props> = ({
       editingTitleInputRef.current?.focus();
     }
   }, [editingTodoId, todo.id, todo.title]);
+
+  useEffect(() => {
+    if (isEditTodoFormFocused && setIsEditTodoFormFocused) {
+      editingTitleInputRef.current?.focus();
+      setIsEditTodoFormFocused(false);
+    }
+  }, [isEditTodoFormFocused, setIsEditTodoFormFocused]);
 
   const handleChangeTodoStatus = () => {
     if (onTodoUpdate) {
@@ -93,10 +108,13 @@ export const TodoItem: React.FC<Props> = ({
     }
 
     if (editingTitle && onTodoUpdate && setEditingTodoId) {
-      onTodoUpdate(todo.id, { title: trimmedEditingTitle }).then(() => {
-        setEditingTitle(todo.title);
-        setEditingTodoId(null);
-      });
+      onTodoUpdate(todo.id, { title: trimmedEditingTitle }, true)
+        .then(() => {
+          setEditingTodoId(null);
+        })
+        .catch(() => {
+          setEditingTitle(todo.title);
+        });
     } else if (onTodoDelete) {
       onTodoDelete(todo.id);
     }

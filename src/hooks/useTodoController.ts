@@ -16,6 +16,7 @@ export const useTodoController = () => {
   const [todoToDeleteIds, setTodoToDeleteIds] = useState<Todo['id'][]>([]);
   const [todosToUpdate, setTodosToUpdate] = useState<Todo[]>([]);
   const [editingTodoId, setEditingTodoId] = useState<Todo['id'] | null>(null);
+  const [isEditTodoFormFocused, setIsEditTodoFormFocused] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(
     StatusFilter.All,
   );
@@ -117,10 +118,6 @@ export const useTodoController = () => {
     todoDataToUpdate: Partial<Todo>,
     isTitleChange = false,
   ) => {
-    if (isTitleChange) {
-      setEditingTodoId(todoId);
-    }
-
     const foundTodoToUpdate = todos.find(todo => todo.id === todoId) as Todo;
 
     setTodosToUpdate(current => [...current, foundTodoToUpdate]);
@@ -136,6 +133,10 @@ export const useTodoController = () => {
       })
       .catch(error => {
         setErrorMessage(ErrorMessage.onUpdate);
+        if (isTitleChange) {
+          setIsEditTodoFormFocused(true);
+        }
+
         throw error;
       })
       .finally(() => {
@@ -185,6 +186,8 @@ export const useTodoController = () => {
     onTodoUpdate,
     editingTodoId,
     setEditingTodoId,
+    isEditTodoFormFocused,
+    setIsEditTodoFormFocused,
     onToggleTodos,
     statusFilter,
     setStatusFilter,

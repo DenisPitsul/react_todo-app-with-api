@@ -27,6 +27,8 @@ export const App: React.FC = () => {
     onTodoUpdate,
     editingTodoId,
     setEditingTodoId,
+    isEditTodoFormFocused,
+    setIsEditTodoFormFocused,
     onToggleTodos,
     statusFilter,
     setStatusFilter,
@@ -63,6 +65,8 @@ export const App: React.FC = () => {
           onTodoUpdate={onTodoUpdate}
           editingTodoId={editingTodoId}
           setEditingTodoId={setEditingTodoId}
+          isEditTodoFormFocused={isEditTodoFormFocused}
+          setIsEditTodoFormFocused={setIsEditTodoFormFocused}
         />
 
         {!isTodosLoading && isThereAlLeastOneTodo && (
