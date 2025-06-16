@@ -32,14 +32,16 @@ export const AddTodoForm: React.FC<Props> = ({
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (todoTitle === '') {
+    const trimmedTodoTitle = todoTitle.trim();
+
+    if (trimmedTodoTitle === '') {
       setErrorMessage(ErrorMessage.OnTitleEmpty);
 
       return;
     }
 
     setIsLoading(true);
-    onAdd(todoTitle.trim())
+    onAdd(trimmedTodoTitle)
       .then(() => {
         setTodoTitle('');
       })
