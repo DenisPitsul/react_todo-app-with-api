@@ -48,9 +48,6 @@ export const AddTodoForm: React.FC<Props> = ({
       .catch(() => {})
       .finally(() => {
         setIsLoading(false);
-        requestAnimationFrame(() => {
-          inputRef.current?.focus();
-        });
       });
   };
 
