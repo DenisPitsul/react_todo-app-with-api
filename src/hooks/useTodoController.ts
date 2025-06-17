@@ -150,12 +150,6 @@ export const useTodoController = () => {
   );
 
   const onClearCompletedTodos = useCallback(async () => {
-    // const allCompletedTodoIds = todos
-    //   .filter(todo => todo.completed)
-    //   .map(todo => todo.id);
-
-    // Promise.all(allCompletedTodoIds.map(id => onTodoDelete(id)));
-
     const allCompletedTodoIds = todos
       .filter(todo => todo.completed)
       .map(todo => todo.id);
