@@ -65,7 +65,7 @@ export const useTodoController = () => {
     return todos.some(todo => isTodoLoading(todo.id));
   }, [todos, isTodoLoading]);
 
-  const onAddTodo = (todoTitle: string) => {
+  const onAddTodo = useCallback((todoTitle: string) => {
     const newTodo: Omit<Todo, 'id'> = {
       userId: todoService.USER_ID,
       title: todoTitle,
@@ -92,9 +92,9 @@ export const useTodoController = () => {
     });
 
     return createTodoPromise;
-  };
+  }, []);
 
-  const onTodoDelete = (todoId: Todo['id']) => {
+  const onTodoDelete = useCallback((todoId: Todo['id']) => {
     setTodoToDeleteIds(current => [...current, todoId]);
 
     return todoService
@@ -111,60 +111,127 @@ export const useTodoController = () => {
         setTodoToDeleteIds(current => current.filter(id => id !== todoId));
         setIsAddTodoFormFocused(true);
       });
-  };
+  }, []);
 
-  const onTodoUpdate = (
-    todoId: Todo['id'],
-    todoDataToUpdate: Partial<Todo>,
-    isTitleChange = false,
-  ) => {
-    const foundTodoToUpdate = todos.find(todo => todo.id === todoId) as Todo;
+  const onTodoUpdate = useCallback(
+    (
+      todoId: Todo['id'],
+      todoDataToUpdate: Partial<Todo>,
+      isTitleChange = false,
+    ) => {
+      const foundTodoToUpdate = todos.find(todo => todo.id === todoId) as Todo;
 
-    setTodosToUpdate(current => [...current, foundTodoToUpdate]);
+      setTodosToUpdate(current => [...current, foundTodoToUpdate]);
 
-    return todoService
-      .updateTodo(todoId, todoDataToUpdate)
-      .then(updatedTodo => {
-        setTodos(currentTodos => {
-          return currentTodos.map(todo =>
-            todo.id === updatedTodo.id ? updatedTodo : todo,
+      return todoService
+        .updateTodo(todoId, todoDataToUpdate)
+        .then(updatedTodo => {
+          setTodos(currentTodos => {
+            return currentTodos.map(todo =>
+              todo.id === updatedTodo.id ? updatedTodo : todo,
+            );
+          });
+        })
+        .catch(error => {
+          setErrorMessage(ErrorMessage.onUpdate);
+          if (isTitleChange) {
+            setIsEditTodoFormFocused(true);
+          }
+
+          throw error;
+        })
+        .finally(() => {
+          setTodosToUpdate(current =>
+            current.filter(todo => todo.id !== todoId),
           );
         });
-      })
-      .catch(error => {
-        setErrorMessage(ErrorMessage.onUpdate);
-        if (isTitleChange) {
-          setIsEditTodoFormFocused(true);
-        }
+    },
+    [todos],
+  );
 
-        throw error;
-      })
-      .finally(() => {
-        setTodosToUpdate(current => current.filter(todo => todo.id !== todoId));
-      });
-  };
+  const onClearCompletedTodos = useCallback(async () => {
+    // const allCompletedTodoIds = todos
+    //   .filter(todo => todo.completed)
+    //   .map(todo => todo.id);
 
-  const onClearCompletedTodos = () => {
+    // Promise.all(allCompletedTodoIds.map(id => onTodoDelete(id)));
+
     const allCompletedTodoIds = todos
       .filter(todo => todo.completed)
       .map(todo => todo.id);
 
-    Promise.all(allCompletedTodoIds.map(id => onTodoDelete(id)));
-  };
+    setTodoToDeleteIds(cur => [...cur, ...allCompletedTodoIds]);
 
-  const onToggleTodos = () => {
+    const results = await Promise.allSettled(
+      allCompletedTodoIds.map(id => todoService.deleteTodo(id)),
+    );
+
+    const hasOnDeleteError = results.some(
+      result => result.status === 'rejected',
+    );
+
+    const successfulDeletedIds = allCompletedTodoIds.filter(
+      (_, index) => results[index].status === 'fulfilled',
+    );
+
+    if (hasOnDeleteError) {
+      setErrorMessage(ErrorMessage.OnDelete);
+    }
+
+    setTodoToDeleteIds(current =>
+      current.filter(id => !allCompletedTodoIds.includes(id)),
+    );
+
+    setTodos(current =>
+      current.filter(todo => !successfulDeletedIds.includes(todo.id)),
+    );
+
+    setIsAddTodoFormFocused(true);
+  }, [todos]);
+
+  const onToggleTodos = useCallback(async () => {
     const newStatus = !isAllTodosCompleted;
 
     const localTodosToUpdate = todos.filter(
       todo => todo.completed !== newStatus,
     );
 
-    Promise.all(
+    setTodosToUpdate(current => [...current, ...localTodosToUpdate]);
+
+    const results = await Promise.allSettled(
       localTodosToUpdate.map(todoToUpdate =>
-        onTodoUpdate(todoToUpdate.id, { completed: newStatus }),
+        todoService.updateTodo(todoToUpdate.id, { completed: newStatus }),
       ),
     );
-  };
+
+    const hasOnDeleteError = results.some(
+      result => result.status === 'rejected',
+    );
+
+    const successfulUpdatedTodos = results
+      .filter(result => result.status === 'fulfilled')
+      .map(item => item.value);
+
+    if (hasOnDeleteError) {
+      setErrorMessage(ErrorMessage.onUpdate);
+
+      setIsEditTodoFormFocused(true);
+    }
+
+    setTodosToUpdate(current =>
+      current.filter(todo => !localTodosToUpdate.includes(todo)),
+    );
+
+    setTodos(current =>
+      current.map(todo => {
+        const foundSuccessfulUpdatedTodo = successfulUpdatedTodos.find(
+          successfulUpdatedTodo => successfulUpdatedTodo.id === todo.id,
+        );
+
+        return foundSuccessfulUpdatedTodo ? foundSuccessfulUpdatedTodo : todo;
+      }),
+    );
+  }, [isAllTodosCompleted, todos]);
 
   return {
     todos,
