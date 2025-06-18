@@ -9,7 +9,10 @@ type Props = {
   todos: Todo[];
   tempTodo: Todo | null;
   isTodoLoading: (todoId: Todo['id']) => boolean;
-  onTodoDelete: (todoId: Todo['id']) => void;
+  onTodoDelete: (
+    todoId: Todo['id'],
+    isDeleteAfterUpdate?: boolean,
+  ) => Promise<void>;
   onTodoUpdate: (
     todoId: Todo['id'],
     todoData: Partial<Todo>,

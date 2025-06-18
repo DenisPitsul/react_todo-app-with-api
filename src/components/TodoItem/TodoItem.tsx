@@ -11,7 +11,10 @@ type Props = {
   todo: Todo;
   isTodoLoading: (todoId: Todo['id']) => boolean;
   isTempTodo?: boolean;
-  onTodoDelete?: (todoId: Todo['id']) => void;
+  onTodoDelete?: (
+    todoId: Todo['id'],
+    isDeleteAfterUpdate?: boolean,
+  ) => Promise<void>;
   onTodoUpdate?: (
     todoId: Todo['id'],
     todoData: Partial<Todo>,
@@ -35,7 +38,6 @@ export const TodoItem: React.FC<Props> = ({
   setIsEditTodoFormFocused,
 }) => {
   const [editingTitle, setEditingTitle] = useState(todo.title);
-  const editingTitleFormRef = useRef<HTMLFormElement>(null);
   const editingTitleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -108,23 +110,13 @@ export const TodoItem: React.FC<Props> = ({
     }
 
     if (editingTitle && onTodoUpdate && setEditingTodoId) {
-      onTodoUpdate(todo.id, { title: trimmedEditingTitle }, true)
-        .then(() => {
-          setEditingTodoId(null);
-        })
-        .catch(() => {
-          setEditingTitle(todo.title);
-        });
+      onTodoUpdate(todo.id, { title: trimmedEditingTitle }, true).catch(() => {
+        setEditingTitle(todo.title);
+      });
     } else if (onTodoDelete) {
-      onTodoDelete(todo.id);
-    }
-  };
-
-  const handleFormBlur = (event: React.FocusEvent<HTMLFormElement>) => {
-    const nextFocusedElement = event.relatedTarget as HTMLElement | null;
-
-    if (!editingTitleFormRef.current?.contains(nextFocusedElement)) {
-      handleUpdateTodoOrDeleteIfEditingTextIsEmpty();
+      onTodoDelete(todo.id, true).catch(() => {
+        setEditingTitle(todo.title);
+      });
     }
   };
 
@@ -153,11 +145,9 @@ export const TodoItem: React.FC<Props> = ({
 
       {editingTodoId === todo.id ? (
         <form
-          ref={editingTitleFormRef}
           onSubmit={event =>
             handleUpdateTodoOrDeleteIfEditingTextIsEmpty(event)
           }
-          onBlur={handleFormBlur}
         >
           <input
             ref={editingTitleInputRef}

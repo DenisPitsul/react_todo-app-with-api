@@ -77,9 +77,10 @@ export const useTodoController = () => {
       .then(todoFromServer => {
         setTodos(currentTodos => [...currentTodos, todoFromServer]);
       })
-      .catch(error => {
+      .catch(() => {
         setErrorMessage(ErrorMessage.OnAdd);
-        throw error;
+
+        throw new Error(ErrorMessage.OnAdd);
       })
       .finally(() => {
         setTempTodo(null);
@@ -94,24 +95,34 @@ export const useTodoController = () => {
     return createTodoPromise;
   }, []);
 
-  const onTodoDelete = useCallback((todoId: Todo['id']) => {
-    setTodoToDeleteIds(current => [...current, todoId]);
+  const onTodoDelete = useCallback(
+    (todoId: Todo['id'], isDeleteAfterUpdate = false) => {
+      setTodoToDeleteIds(current => [...current, todoId]);
 
-    return todoService
-      .deleteTodo(todoId)
-      .then(() => {
-        setTodos(currentTodos =>
-          currentTodos.filter(todo => todo.id !== todoId),
-        );
-      })
-      .catch(() => {
-        setErrorMessage(ErrorMessage.OnDelete);
-      })
-      .finally(() => {
-        setTodoToDeleteIds(current => current.filter(id => id !== todoId));
-        setIsAddTodoFormFocused(true);
-      });
-  }, []);
+      return todoService
+        .deleteTodo(todoId)
+        .then(() => {
+          setTodos(currentTodos =>
+            currentTodos.filter(todo => todo.id !== todoId),
+          );
+          setIsAddTodoFormFocused(true);
+        })
+        .catch(() => {
+          setErrorMessage(ErrorMessage.OnDelete);
+
+          if (isDeleteAfterUpdate) {
+            setIsEditTodoFormFocused(true);
+            throw new Error(ErrorMessage.OnDelete);
+          } else {
+            setIsAddTodoFormFocused(true);
+          }
+        })
+        .finally(() => {
+          setTodoToDeleteIds(current => current.filter(id => id !== todoId));
+        });
+    },
+    [],
+  );
 
   const onTodoUpdate = useCallback(
     (
@@ -131,14 +142,15 @@ export const useTodoController = () => {
               todo.id === updatedTodo.id ? updatedTodo : todo,
             );
           });
+          setEditingTodoId(null);
         })
-        .catch(error => {
+        .catch(() => {
           setErrorMessage(ErrorMessage.onUpdate);
           if (isTitleChange) {
             setIsEditTodoFormFocused(true);
           }
 
-          throw error;
+          throw new Error(ErrorMessage.onUpdate);
         })
         .finally(() => {
           setTodosToUpdate(current =>
