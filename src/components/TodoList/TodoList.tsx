@@ -9,19 +9,11 @@ type Props = {
   todos: Todo[];
   tempTodo: Todo | null;
   isTodoLoading: (todoId: Todo['id']) => boolean;
-  onTodoDelete: (
-    todoId: Todo['id'],
-    isDeleteAfterUpdate?: boolean,
-  ) => Promise<void>;
+  onTodoDelete: (todoId: Todo['id']) => Promise<void>;
   onTodoUpdate: (
     todoId: Todo['id'],
-    todoData: Partial<Todo>,
-    isTitleChange?: boolean,
+    todoData: Partial<Pick<Todo, 'title' | 'completed'>>,
   ) => Promise<void>;
-  editingTodoId: Todo['id'] | null;
-  setEditingTodoId: (todoId: Todo['id'] | null) => void;
-  isEditTodoFormFocused: boolean;
-  setIsEditTodoFormFocused: (isFocused: boolean) => void;
 };
 
 export const TodoList: React.FC<Props> = ({
@@ -30,10 +22,6 @@ export const TodoList: React.FC<Props> = ({
   isTodoLoading,
   onTodoDelete,
   onTodoUpdate,
-  editingTodoId,
-  setEditingTodoId,
-  isEditTodoFormFocused,
-  setIsEditTodoFormFocused,
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -49,10 +37,6 @@ export const TodoList: React.FC<Props> = ({
               isTodoLoading={isTodoLoading}
               onTodoDelete={onTodoDelete}
               onTodoUpdate={onTodoUpdate}
-              editingTodoId={editingTodoId}
-              setEditingTodoId={setEditingTodoId}
-              isEditTodoFormFocused={isEditTodoFormFocused}
-              setIsEditTodoFormFocused={setIsEditTodoFormFocused}
             />
           </CSSTransition>
         ))}

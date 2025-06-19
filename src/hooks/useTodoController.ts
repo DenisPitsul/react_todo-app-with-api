@@ -1,35 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Todo } from '../types/todo/Todo';
 import * as todoService from '../api/todos';
-import { ErrorMessage } from '../enums/errorMessage';
+import { ErrorMessages } from '../enums/errorMessages';
 import { StatusFilter } from '../enums/statusFilter';
 import { getFilteredTodos } from '../utils/getFilteredTodos';
+import { AddTodoFormRef } from '../components/AddTodoForm';
 
 export const useTodoController = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [isTodosLoading, setIsTodosLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<ErrorMessage>(
-    ErrorMessage.None,
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<ErrorMessages>(
+    ErrorMessages.None,
   );
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [isAddTodoFormFocused, setIsAddTodoFormFocused] = useState(false);
-  const [todoToDeleteIds, setTodoToDeleteIds] = useState<Todo['id'][]>([]);
-  const [todosToUpdate, setTodosToUpdate] = useState<Todo[]>([]);
-  const [editingTodoId, setEditingTodoId] = useState<Todo['id'] | null>(null);
-  const [isEditTodoFormFocused, setIsEditTodoFormFocused] = useState(false);
+  const [processingTodoIds, setProcessingTodoIds] = useState<Todo['id'][]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(
     StatusFilter.All,
   );
+  const inputFocusRef = useRef<AddTodoFormRef>(null);
 
   useEffect(() => {
-    setIsTodosLoading(true);
+    setIsInitialLoading(true);
     todoService
       .getTodos()
       .then(setTodos)
       .catch(() => {
-        setErrorMessage(ErrorMessage.OnLoad);
+        setErrorMessage(ErrorMessages.OnLoad);
       })
-      .finally(() => setIsTodosLoading(false));
+      .finally(() => setIsInitialLoading(false));
   }, []);
 
   const filteredTodos = useMemo(() => {
@@ -50,27 +48,37 @@ export const useTodoController = () => {
     };
   }, [todos]);
 
+  const addTodoIdToProcessing = useCallback((todoId: Todo['id']) => {
+    setProcessingTodoIds(current => [...current, todoId]);
+  }, []);
+
+  const removeTodoFromProcessing = useCallback((todoId: Todo['id']) => {
+    setProcessingTodoIds(current => current.filter(id => id !== todoId));
+  }, []);
+
+  const updateTodoInList = useCallback((updatedTodo: Todo) => {
+    setTodos(current =>
+      current.map(todo => (todo.id === updatedTodo.id ? updatedTodo : todo)),
+    );
+  }, []);
+
   const isTodoLoading = useCallback(
     (todoId: number) => {
-      return (
-        tempTodo?.id === todoId ||
-        todoToDeleteIds?.includes(todoId) ||
-        todosToUpdate?.findIndex(todoParam => todoParam.id === todoId) !== -1
-      );
+      return tempTodo?.id === todoId || processingTodoIds?.includes(todoId);
     },
-    [tempTodo, todoToDeleteIds, todosToUpdate],
+    [tempTodo, processingTodoIds],
   );
 
-  const isAlLeastOneTodoLoading = useMemo(() => {
-    return todos.some(todo => isTodoLoading(todo.id));
-  }, [todos, isTodoLoading]);
+  const isAlLeastOneTodoLoading = useMemo(
+    () => !!processingTodoIds.length,
+    [processingTodoIds],
+  );
 
   const onAddTodo = useCallback((todoTitle: string) => {
     if (todoTitle === '') {
-      setErrorMessage(ErrorMessage.OnTitleEmpty);
-      setIsAddTodoFormFocused(true);
+      setErrorMessage(ErrorMessages.OnTitleEmpty);
 
-      return Promise.reject();
+      return Promise.reject(ErrorMessages.OnTitleEmpty);
     }
 
     const newTodo: Omit<Todo, 'id'> = {
@@ -85,13 +93,12 @@ export const useTodoController = () => {
         setTodos(currentTodos => [...currentTodos, todoFromServer]);
       })
       .catch(() => {
-        setErrorMessage(ErrorMessage.OnAdd);
+        setErrorMessage(ErrorMessages.OnAdd);
 
-        throw new Error(ErrorMessage.OnAdd);
+        throw new Error(ErrorMessages.OnAdd);
       })
       .finally(() => {
         setTempTodo(null);
-        setIsAddTodoFormFocused(true);
       });
 
     setTempTodo({
@@ -103,8 +110,8 @@ export const useTodoController = () => {
   }, []);
 
   const onTodoDelete = useCallback(
-    (todoId: Todo['id'], isDeleteAfterUpdate = false) => {
-      setTodoToDeleteIds(current => [...current, todoId]);
+    (todoId: Todo['id']) => {
+      addTodoIdToProcessing(todoId);
 
       return todoService
         .deleteTodo(todoId)
@@ -112,60 +119,42 @@ export const useTodoController = () => {
           setTodos(currentTodos =>
             currentTodos.filter(todo => todo.id !== todoId),
           );
-          setIsAddTodoFormFocused(true);
+          inputFocusRef.current?.focus();
         })
         .catch(() => {
-          setErrorMessage(ErrorMessage.OnDelete);
+          setErrorMessage(ErrorMessages.OnDelete);
 
-          if (isDeleteAfterUpdate) {
-            setIsEditTodoFormFocused(true);
-            throw new Error(ErrorMessage.OnDelete);
-          } else {
-            setIsAddTodoFormFocused(true);
-          }
+          throw new Error(ErrorMessages.OnDelete);
         })
         .finally(() => {
-          setTodoToDeleteIds(current => current.filter(id => id !== todoId));
+          removeTodoFromProcessing(todoId);
         });
     },
-    [],
+    [addTodoIdToProcessing, removeTodoFromProcessing],
   );
 
   const onTodoUpdate = useCallback(
     (
       todoId: Todo['id'],
-      todoDataToUpdate: Partial<Todo>,
-      isTitleChange = false,
+      todoDataToUpdate: Partial<Pick<Todo, 'title' | 'completed'>>,
     ) => {
-      const foundTodoToUpdate = todos.find(todo => todo.id === todoId) as Todo;
-
-      setTodosToUpdate(current => [...current, foundTodoToUpdate]);
+      addTodoIdToProcessing(todoId);
 
       return todoService
         .updateTodo(todoId, todoDataToUpdate)
         .then(updatedTodo => {
-          setTodos(currentTodos => {
-            return currentTodos.map(todo =>
-              todo.id === updatedTodo.id ? updatedTodo : todo,
-            );
-          });
-          setEditingTodoId(null);
+          updateTodoInList(updatedTodo);
         })
         .catch(() => {
-          setErrorMessage(ErrorMessage.onUpdate);
-          if (isTitleChange) {
-            setIsEditTodoFormFocused(true);
-          }
+          setErrorMessage(ErrorMessages.onUpdate);
 
-          throw new Error(ErrorMessage.onUpdate);
+          throw new Error(ErrorMessages.onUpdate);
         })
         .finally(() => {
-          setTodosToUpdate(current =>
-            current.filter(todo => todo.id !== todoId),
-          );
+          removeTodoFromProcessing(todoId);
         });
     },
-    [todos],
+    [addTodoIdToProcessing, removeTodoFromProcessing, updateTodoInList],
   );
 
   const onClearCompletedTodos = useCallback(async () => {
@@ -173,81 +162,26 @@ export const useTodoController = () => {
       .filter(todo => todo.completed)
       .map(todo => todo.id);
 
-    setTodoToDeleteIds(cur => [...cur, ...allCompletedTodoIds]);
+    await Promise.all(allCompletedTodoIds.map(id => onTodoDelete(id)));
 
-    const results = await Promise.allSettled(
-      allCompletedTodoIds.map(id => todoService.deleteTodo(id)),
-    );
-
-    const hasOnDeleteError = results.some(
-      result => result.status === 'rejected',
-    );
-
-    const successfulDeletedIds = allCompletedTodoIds.filter(
-      (_, index) => results[index].status === 'fulfilled',
-    );
-
-    if (hasOnDeleteError) {
-      setErrorMessage(ErrorMessage.OnDelete);
-    }
-
-    setTodoToDeleteIds(current =>
-      current.filter(id => !allCompletedTodoIds.includes(id)),
-    );
-
-    setTodos(current =>
-      current.filter(todo => !successfulDeletedIds.includes(todo.id)),
-    );
-
-    setIsAddTodoFormFocused(true);
-  }, [todos]);
+    inputFocusRef.current?.focus();
+  }, [onTodoDelete, todos]);
 
   const onToggleTodos = useCallback(async () => {
     const newStatus = !isAllTodosCompleted;
+    const todosToUpdate = todos.filter(todo => todo.completed !== newStatus);
 
-    const localTodosToUpdate = todos.filter(
-      todo => todo.completed !== newStatus,
-    );
-
-    setTodosToUpdate(current => [...current, ...localTodosToUpdate]);
-
-    const results = await Promise.allSettled(
-      localTodosToUpdate.map(todoToUpdate =>
-        todoService.updateTodo(todoToUpdate.id, { completed: newStatus }),
+    await Promise.all(
+      todosToUpdate.map(todo =>
+        onTodoUpdate(todo.id, { completed: newStatus }),
       ),
     );
-
-    const hasOnUpdateError = results.some(
-      result => result.status === 'rejected',
-    );
-
-    const successfulUpdatedTodos = results
-      .filter(result => result.status === 'fulfilled')
-      .map(item => item.value);
-
-    if (hasOnUpdateError) {
-      setErrorMessage(ErrorMessage.onUpdate);
-    }
-
-    setTodosToUpdate(current =>
-      current.filter(todo => !localTodosToUpdate.includes(todo)),
-    );
-
-    setTodos(current =>
-      current.map(todo => {
-        const foundSuccessfulUpdatedTodo = successfulUpdatedTodos.find(
-          successfulUpdatedTodo => successfulUpdatedTodo.id === todo.id,
-        );
-
-        return foundSuccessfulUpdatedTodo ? foundSuccessfulUpdatedTodo : todo;
-      }),
-    );
-  }, [isAllTodosCompleted, todos]);
+  }, [isAllTodosCompleted, onTodoUpdate, todos]);
 
   return {
     todos,
     isThereAlLeastOneTodo,
-    isTodosLoading,
+    isInitialLoading,
     isAlLeastOneTodoLoading,
     isAllTodosCompleted,
     errorMessage,
@@ -255,17 +189,10 @@ export const useTodoController = () => {
     tempTodo,
     isTodoLoading,
     onAddTodo,
-    isAddTodoFormFocused,
-    setIsAddTodoFormFocused,
+    inputFocusRef,
     onTodoDelete,
-    todoToDeleteIds,
     onClearCompletedTodos,
-    todosToUpdate,
     onTodoUpdate,
-    editingTodoId,
-    setEditingTodoId,
-    isEditTodoFormFocused,
-    setIsEditTodoFormFocused,
     onToggleTodos,
     statusFilter,
     setStatusFilter,

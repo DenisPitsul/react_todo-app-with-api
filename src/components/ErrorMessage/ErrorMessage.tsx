@@ -1,24 +1,24 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import React, { useEffect } from 'react';
 import cn from 'classnames';
-import { ErrorMessage } from '../../enums/errorMessage';
+import { ErrorMessages } from '../../enums/errorMessages';
 
 type Props = {
   errorMessage: string;
-  setErrorMessage: (errorMessage: ErrorMessage) => void;
+  setErrorMessage: (errorMessage: ErrorMessages) => void;
 };
 
-export const ErrorComponent: React.FC<Props> = ({
+export const ErrorMessage: React.FC<Props> = ({
   errorMessage,
   setErrorMessage,
 }) => {
   useEffect(() => {
-    if (errorMessage === ErrorMessage.None) {
+    if (errorMessage === ErrorMessages.None) {
       return;
     }
 
     const timerId = setTimeout(() => {
-      setErrorMessage(ErrorMessage.None);
+      setErrorMessage(ErrorMessages.None);
     }, 3000);
 
     return () => {
@@ -35,7 +35,7 @@ export const ErrorComponent: React.FC<Props> = ({
         'is-light',
         'has-text-weight-normal',
         {
-          hidden: errorMessage === ErrorMessage.None,
+          hidden: errorMessage === ErrorMessages.None,
         },
       )}
     >
@@ -44,7 +44,7 @@ export const ErrorComponent: React.FC<Props> = ({
         type="button"
         className="delete"
         onClick={() => {
-          setErrorMessage(ErrorMessage.None);
+          setErrorMessage(ErrorMessages.None);
         }}
       />
       {errorMessage}

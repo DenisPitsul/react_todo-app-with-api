@@ -3,27 +3,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import cn from 'classnames';
 import { Todo } from '../../types/todo/Todo';
 
-const TODO_DIV_CLASSNAME = 'todo';
-const TODO_REMOVE_BUTTON_CLASSNAME = 'todo__remove';
-const TODO_STATUS_CHECKBOX_CLASSNAME = 'todo__status';
-
 type Props = {
   todo: Todo;
   isTodoLoading: (todoId: Todo['id']) => boolean;
   isTempTodo?: boolean;
-  onTodoDelete?: (
-    todoId: Todo['id'],
-    isDeleteAfterUpdate?: boolean,
-  ) => Promise<void>;
+  onTodoDelete?: (todoId: Todo['id']) => Promise<void>;
   onTodoUpdate?: (
     todoId: Todo['id'],
-    todoData: Partial<Todo>,
-    isTitleChange?: boolean,
+    todoData: Partial<Pick<Todo, 'title' | 'completed'>>,
   ) => Promise<void>;
-  editingTodoId?: Todo['id'] | null;
-  setEditingTodoId?: (todoId: Todo['id'] | null) => void;
-  isEditTodoFormFocused?: boolean;
-  setIsEditTodoFormFocused?: (isFocused: boolean) => void;
 };
 
 export const TodoItem: React.FC<Props> = ({
@@ -32,29 +20,17 @@ export const TodoItem: React.FC<Props> = ({
   isTempTodo = false,
   onTodoDelete,
   onTodoUpdate,
-  editingTodoId,
-  setEditingTodoId,
-  isEditTodoFormFocused,
-  setIsEditTodoFormFocused,
 }) => {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editingTitle, setEditingTitle] = useState(todo.title);
   const editingTitleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (editingTodoId === todo.id) {
-      setEditingTitle(prevTitleValue =>
-        prevTitleValue === todo.title ? todo.title : prevTitleValue,
-      );
+    if (isEditingTitle) {
+      setEditingTitle(() => todo.title);
       editingTitleInputRef.current?.focus();
     }
-  }, [editingTodoId, todo.id, todo.title]);
-
-  useEffect(() => {
-    if (isEditTodoFormFocused && setIsEditTodoFormFocused) {
-      editingTitleInputRef.current?.focus();
-      setIsEditTodoFormFocused(false);
-    }
-  }, [isEditTodoFormFocused, setIsEditTodoFormFocused]);
+  }, [isEditingTitle, todo.title]);
 
   const handleChangeTodoStatus = () => {
     if (onTodoUpdate) {
@@ -68,32 +44,6 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
-  const handleDoubleClickOnTodo = (
-    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
-  ) => {
-    const target = event.target as HTMLElement;
-
-    const isClickOnDeleteButton = target.closest(
-      `.${TODO_REMOVE_BUTTON_CLASSNAME}`,
-    );
-    const isClickOnCheckbox = target.closest(
-      `.${TODO_STATUS_CHECKBOX_CLASSNAME}`,
-    );
-
-    const isClickOnTodoDiv = (
-      event.currentTarget as HTMLElement
-    ).classList.contains(TODO_DIV_CLASSNAME);
-
-    if (
-      !isClickOnDeleteButton &&
-      !isClickOnCheckbox &&
-      isClickOnTodoDiv &&
-      setEditingTodoId
-    ) {
-      setEditingTodoId(todo.id);
-    }
-  };
-
   const handleUpdateTodoOrDeleteIfEditingTextIsEmpty = (
     event?: React.FormEvent<HTMLFormElement>,
   ) => {
@@ -103,47 +53,55 @@ export const TodoItem: React.FC<Props> = ({
 
     const trimmedEditingTitle = editingTitle.trim();
 
-    if (trimmedEditingTitle === todo.title && setEditingTodoId) {
-      setEditingTodoId(null);
+    if (trimmedEditingTitle === todo.title) {
+      setIsEditingTitle(false);
 
       return;
     }
 
-    if (editingTitle && onTodoUpdate && setEditingTodoId) {
-      onTodoUpdate(todo.id, { title: trimmedEditingTitle }, true).catch(() => {
-        setEditingTitle(todo.title);
-      });
+    if (trimmedEditingTitle && onTodoUpdate) {
+      onTodoUpdate(todo.id, { title: trimmedEditingTitle })
+        .then(() => {
+          setIsEditingTitle(false);
+        })
+        .catch(() => {
+          setEditingTitle(todo.title);
+        });
     } else if (onTodoDelete) {
-      onTodoDelete(todo.id, true).catch(() => {
-        setEditingTitle(todo.title);
-      });
+      onTodoDelete(todo.id)
+        .then(() => {
+          setIsEditingTitle(false);
+        })
+        .catch(() => {
+          setEditingTitle(todo.title);
+        });
     }
   };
 
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape' && setEditingTodoId) {
+    if (event.key === 'Escape') {
       setEditingTitle(todo.title);
-      setEditingTodoId(null);
+      setIsEditingTitle(false);
     }
   };
 
   return (
     <div
       data-cy="Todo"
-      className={cn(TODO_DIV_CLASSNAME, { completed: todo.completed })}
-      onDoubleClick={handleDoubleClickOnTodo}
+      className={cn('todo', { completed: todo.completed })}
+      onDoubleClick={() => setIsEditingTitle(true)}
     >
       <label className="todo__status-label">
         <input
           data-cy="TodoStatus"
           type="checkbox"
-          className={TODO_STATUS_CHECKBOX_CLASSNAME}
+          className="todo__status"
           checked={todo.completed}
           onChange={handleChangeTodoStatus}
         />
       </label>
 
-      {editingTodoId === todo.id ? (
+      {isEditingTitle ? (
         <form
           onSubmit={event =>
             handleUpdateTodoOrDeleteIfEditingTextIsEmpty(event)
@@ -169,7 +127,7 @@ export const TodoItem: React.FC<Props> = ({
 
           <button
             type="button"
-            className={TODO_REMOVE_BUTTON_CLASSNAME}
+            className="todo__remove"
             data-cy="TodoDelete"
             onClick={handleDeleteTodo}
             disabled={isTempTodo}

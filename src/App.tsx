@@ -2,9 +2,9 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React from 'react';
 import { UserWarning } from './UserWarning';
-import { USER_ID } from './api/todos';
+import { TEMP_TODO_ID, USER_ID } from './api/todos';
 import { TodoList } from './components/TodoList';
-import { ErrorComponent } from './components/ErrorComponent';
+import { ErrorMessage } from './components/ErrorMessage';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
 import { useTodoController } from './hooks/useTodoController';
@@ -12,7 +12,7 @@ import { useTodoController } from './hooks/useTodoController';
 export const App: React.FC = () => {
   const {
     isThereAlLeastOneTodo,
-    isTodosLoading,
+    isInitialLoading,
     errorMessage,
     setErrorMessage,
     tempTodo,
@@ -20,15 +20,10 @@ export const App: React.FC = () => {
     isAlLeastOneTodoLoading,
     isAllTodosCompleted,
     onAddTodo,
-    isAddTodoFormFocused,
-    setIsAddTodoFormFocused,
+    inputFocusRef,
     onTodoDelete,
     onClearCompletedTodos,
     onTodoUpdate,
-    editingTodoId,
-    setEditingTodoId,
-    isEditTodoFormFocused,
-    setIsEditTodoFormFocused,
     onToggleTodos,
     statusFilter,
     setStatusFilter,
@@ -47,14 +42,13 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
-          errorMessage={errorMessage}
+          isLoading={isTodoLoading(TEMP_TODO_ID)}
           isThereAlLeastOneTodo={isThereAlLeastOneTodo}
           onAddTodo={onAddTodo}
-          isAddTodoFormFocused={isAddTodoFormFocused}
-          setIsAddTodoFormFocused={setIsAddTodoFormFocused}
           isAlLeastOneTodoLoading={isAlLeastOneTodoLoading}
           isAllTodosCompleted={isAllTodosCompleted}
           onToggleTodos={onToggleTodos}
+          ref={inputFocusRef}
         />
 
         <TodoList
@@ -63,13 +57,9 @@ export const App: React.FC = () => {
           isTodoLoading={isTodoLoading}
           onTodoDelete={onTodoDelete}
           onTodoUpdate={onTodoUpdate}
-          editingTodoId={editingTodoId}
-          setEditingTodoId={setEditingTodoId}
-          isEditTodoFormFocused={isEditTodoFormFocused}
-          setIsEditTodoFormFocused={setIsEditTodoFormFocused}
         />
 
-        {!isTodosLoading && isThereAlLeastOneTodo && (
+        {!isInitialLoading && isThereAlLeastOneTodo && (
           <Footer
             activeTodosCount={activeTodosCount}
             statusFilter={statusFilter}
@@ -80,7 +70,7 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      <ErrorComponent
+      <ErrorMessage
         errorMessage={errorMessage}
         setErrorMessage={setErrorMessage}
       />

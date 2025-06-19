@@ -1,46 +1,44 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import cn from 'classnames';
-import { AddTodoForm } from '../AddTodoForm';
-import { ErrorMessage } from '../../enums/errorMessage';
+import { AddTodoForm, AddTodoFormRef } from '../AddTodoForm';
 
 type Props = {
-  errorMessage: ErrorMessage;
+  isLoading: boolean;
   isThereAlLeastOneTodo: boolean;
   onAddTodo: (todoTitle: string) => Promise<void>;
-  isAddTodoFormFocused: boolean;
-  setIsAddTodoFormFocused: (isFocused: boolean) => void;
   isAlLeastOneTodoLoading: boolean;
   isAllTodosCompleted: boolean;
   onToggleTodos: () => void;
 };
 
-export const Header: React.FC<Props> = ({
-  errorMessage,
-  isThereAlLeastOneTodo,
-  onAddTodo,
-  isAddTodoFormFocused,
-  setIsAddTodoFormFocused,
-  isAlLeastOneTodoLoading,
-  isAllTodosCompleted,
-  onToggleTodos,
-}) => {
-  return (
-    <header className="todoapp__header">
-      {isThereAlLeastOneTodo && !isAlLeastOneTodoLoading && (
-        <button
-          type="button"
-          className={cn('todoapp__toggle-all', { active: isAllTodosCompleted })}
-          data-cy="ToggleAllButton"
-          onClick={onToggleTodos}
-        />
-      )}
+// eslint-disable-next-line react/display-name
+export const Header = forwardRef<AddTodoFormRef, Props>(
+  (
+    {
+      isLoading,
+      isThereAlLeastOneTodo,
+      onAddTodo,
+      isAlLeastOneTodoLoading,
+      isAllTodosCompleted,
+      onToggleTodos,
+    },
+    ref,
+  ) => {
+    return (
+      <header className="todoapp__header">
+        {isThereAlLeastOneTodo && !isAlLeastOneTodoLoading && (
+          <button
+            type="button"
+            className={cn('todoapp__toggle-all', {
+              active: isAllTodosCompleted,
+            })}
+            data-cy="ToggleAllButton"
+            onClick={onToggleTodos}
+          />
+        )}
 
-      <AddTodoForm
-        errorMessage={errorMessage}
-        onAdd={onAddTodo}
-        isAddTodoFormFocused={isAddTodoFormFocused}
-        setIsAddTodoFormFocused={setIsAddTodoFormFocused}
-      />
-    </header>
-  );
-};
+        <AddTodoForm isLoading={isLoading} onAddTodo={onAddTodo} ref={ref} />
+      </header>
+    );
+  },
+);
