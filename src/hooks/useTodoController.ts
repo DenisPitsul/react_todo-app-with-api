@@ -39,13 +39,13 @@ export const useTodoController = () => {
   const {
     isThereAlLeastOneTodo,
     isAllTodosCompleted,
-    activeItemsCount,
+    activeTodosCount,
     isThereAtLeastOneCompletedTodo,
   } = useMemo(() => {
     return {
       isThereAlLeastOneTodo: !!todos.length,
       isAllTodosCompleted: todos.every(todo => todo.completed),
-      activeItemsCount: todos.filter(todo => !todo.completed).length,
+      activeTodosCount: todos.filter(todo => !todo.completed).length,
       isThereAtLeastOneCompletedTodo: todos.some(todo => todo.completed),
     };
   }, [todos]);
@@ -210,7 +210,7 @@ export const useTodoController = () => {
       ),
     );
 
-    const hasOnDeleteError = results.some(
+    const hasOnUpdateError = results.some(
       result => result.status === 'rejected',
     );
 
@@ -218,10 +218,8 @@ export const useTodoController = () => {
       .filter(result => result.status === 'fulfilled')
       .map(item => item.value);
 
-    if (hasOnDeleteError) {
+    if (hasOnUpdateError) {
       setErrorMessage(ErrorMessage.onUpdate);
-
-      setIsEditTodoFormFocused(true);
     }
 
     setTodosToUpdate(current =>
@@ -265,7 +263,7 @@ export const useTodoController = () => {
     statusFilter,
     setStatusFilter,
     filteredTodos,
-    activeItemsCount,
+    activeTodosCount,
     isThereAtLeastOneCompletedTodo,
   };
 };

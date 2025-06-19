@@ -19,10 +19,6 @@ export const AddTodoForm: React.FC<Props> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
     if (isAddTodoFormFocused) {
       inputRef.current?.focus();
       setIsAddTodoFormFocused(false);
@@ -54,6 +50,7 @@ export const AddTodoForm: React.FC<Props> = ({
   return (
     <form onSubmit={onSubmit}>
       <input
+        autoFocus
         ref={inputRef}
         data-cy="NewTodoField"
         type="text"

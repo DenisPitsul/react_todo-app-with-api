@@ -33,7 +33,7 @@ export const App: React.FC = () => {
     statusFilter,
     setStatusFilter,
     filteredTodos,
-    activeItemsCount,
+    activeTodosCount,
     isThereAtLeastOneCompletedTodo,
   } = useTodoController();
 
@@ -71,7 +71,7 @@ export const App: React.FC = () => {
 
         {!isTodosLoading && isThereAlLeastOneTodo && (
           <Footer
-            activeTodosCount={activeItemsCount}
+            activeTodosCount={activeTodosCount}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             isThereAtLeastOneCompletedTodo={isThereAtLeastOneCompletedTodo}
