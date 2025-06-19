@@ -2,14 +2,14 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { ErrorMessage } from '../../enums/errorMessage';
 
 type Props = {
-  setErrorMessage: (errorMessage: ErrorMessage) => void;
+  errorMessage: ErrorMessage;
   onAdd: (todoTitle: string) => Promise<void>;
   isAddTodoFormFocused: boolean;
   setIsAddTodoFormFocused: (isFocused: boolean) => void;
 };
 
 export const AddTodoForm: React.FC<Props> = ({
-  setErrorMessage,
+  errorMessage,
   onAdd,
   isAddTodoFormFocused,
   setIsAddTodoFormFocused,
@@ -19,25 +19,17 @@ export const AddTodoForm: React.FC<Props> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isAddTodoFormFocused) {
+    if (isAddTodoFormFocused || errorMessage === ErrorMessage.OnTitleEmpty) {
       inputRef.current?.focus();
       setIsAddTodoFormFocused(false);
     }
-  }, [isAddTodoFormFocused, setIsAddTodoFormFocused]);
+  }, [errorMessage, isAddTodoFormFocused, setIsAddTodoFormFocused]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmedTodoTitle = todoTitle.trim();
-
-    if (trimmedTodoTitle === '') {
-      setErrorMessage(ErrorMessage.OnTitleEmpty);
-
-      return;
-    }
-
     setIsLoading(true);
-    onAdd(trimmedTodoTitle)
+    onAdd(todoTitle.trim())
       .then(() => {
         setTodoTitle('');
       })

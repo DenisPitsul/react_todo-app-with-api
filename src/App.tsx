@@ -47,8 +47,8 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
+          errorMessage={errorMessage}
           isThereAlLeastOneTodo={isThereAlLeastOneTodo}
-          setErrorMessage={setErrorMessage}
           onAddTodo={onAddTodo}
           isAddTodoFormFocused={isAddTodoFormFocused}
           setIsAddTodoFormFocused={setIsAddTodoFormFocused}

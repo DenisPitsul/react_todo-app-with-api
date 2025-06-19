@@ -66,6 +66,13 @@ export const useTodoController = () => {
   }, [todos, isTodoLoading]);
 
   const onAddTodo = useCallback((todoTitle: string) => {
+    if (todoTitle === '') {
+      setErrorMessage(ErrorMessage.OnTitleEmpty);
+      setIsAddTodoFormFocused(true);
+
+      return Promise.reject();
+    }
+
     const newTodo: Omit<Todo, 'id'> = {
       userId: todoService.USER_ID,
       title: todoTitle,

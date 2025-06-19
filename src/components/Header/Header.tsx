@@ -1,11 +1,11 @@
 import React from 'react';
+import cn from 'classnames';
 import { AddTodoForm } from '../AddTodoForm';
 import { ErrorMessage } from '../../enums/errorMessage';
-import cn from 'classnames';
 
 type Props = {
+  errorMessage: ErrorMessage;
   isThereAlLeastOneTodo: boolean;
-  setErrorMessage: (errorMessage: ErrorMessage) => void;
   onAddTodo: (todoTitle: string) => Promise<void>;
   isAddTodoFormFocused: boolean;
   setIsAddTodoFormFocused: (isFocused: boolean) => void;
@@ -15,8 +15,8 @@ type Props = {
 };
 
 export const Header: React.FC<Props> = ({
+  errorMessage,
   isThereAlLeastOneTodo,
-  setErrorMessage,
   onAddTodo,
   isAddTodoFormFocused,
   setIsAddTodoFormFocused,
@@ -36,7 +36,7 @@ export const Header: React.FC<Props> = ({
       )}
 
       <AddTodoForm
-        setErrorMessage={setErrorMessage}
+        errorMessage={errorMessage}
         onAdd={onAddTodo}
         isAddTodoFormFocused={isAddTodoFormFocused}
         setIsAddTodoFormFocused={setIsAddTodoFormFocused}
