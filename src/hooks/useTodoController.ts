@@ -56,7 +56,7 @@ export const useTodoController = () => {
     setProcessingTodoIds(current => current.filter(id => id !== todoId));
   }, []);
 
-  const updateTodoInList = useCallback((updatedTodo: Todo) => {
+  const updateTodoInState = useCallback((updatedTodo: Todo) => {
     setTodos(current =>
       current.map(todo => (todo.id === updatedTodo.id ? updatedTodo : todo)),
     );
@@ -103,7 +103,7 @@ export const useTodoController = () => {
 
     setTempTodo({
       ...newTodo,
-      id: 0,
+      id: todoService.TEMP_TODO_ID,
     });
 
     return createTodoPromise;
@@ -143,7 +143,7 @@ export const useTodoController = () => {
       return todoService
         .updateTodo(todoId, todoDataToUpdate)
         .then(updatedTodo => {
-          updateTodoInList(updatedTodo);
+          updateTodoInState(updatedTodo);
         })
         .catch(() => {
           setErrorMessage(ErrorMessages.onUpdate);
@@ -154,7 +154,7 @@ export const useTodoController = () => {
           removeTodoFromProcessing(todoId);
         });
     },
-    [addTodoIdToProcessing, removeTodoFromProcessing, updateTodoInList],
+    [addTodoIdToProcessing, removeTodoFromProcessing, updateTodoInState],
   );
 
   const onClearCompletedTodos = useCallback(async () => {
