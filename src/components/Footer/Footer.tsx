@@ -2,6 +2,17 @@ import React from 'react';
 import cn from 'classnames';
 import { StatusFilter } from '../../enums/statusFilter';
 
+const getHref = (filter: StatusFilter) => {
+  switch (filter) {
+    case StatusFilter.All:
+      return '#/';
+    case StatusFilter.Active:
+      return '#/active';
+    case StatusFilter.Completed:
+      return '#/completed';
+  }
+};
+
 type Props = {
   activeTodosCount: number;
   statusFilter: StatusFilter;
@@ -17,17 +28,6 @@ export const Footer: React.FC<Props> = ({
   isThereAtLeastOneCompletedTodo,
   onClearCompletedTodos,
 }) => {
-  const getHref = (filter: StatusFilter) => {
-    switch (filter) {
-      case StatusFilter.All:
-        return '#/';
-      case StatusFilter.Active:
-        return '#/active';
-      case StatusFilter.Completed:
-        return '#/completed';
-    }
-  };
-
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
@@ -44,8 +44,9 @@ export const Footer: React.FC<Props> = ({
             })}
             data-cy={`FilterLink${filter}`}
             onClick={() => onStatusFilterChange(filter)}
+            style={{ textTransform: 'capitalize' }}
           >
-            {filter[0] + filter.slice(1).toLowerCase()}
+            {filter}
           </a>
         ))}
       </nav>
@@ -55,7 +56,7 @@ export const Footer: React.FC<Props> = ({
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
         disabled={!isThereAtLeastOneCompletedTodo}
-        onClick={() => onClearCompletedTodos()}
+        onClick={onClearCompletedTodos}
       >
         Clear completed
       </button>

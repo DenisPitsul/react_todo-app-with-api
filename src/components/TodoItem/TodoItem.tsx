@@ -45,13 +45,7 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
-  const handleUpdateTodoOrDeleteIfEditingTextIsEmpty = (
-    event?: React.FormEvent<HTMLFormElement>,
-  ) => {
-    if (event) {
-      event.preventDefault();
-    }
-
+  const handleUpdateOrDeleteTodo = () => {
     const trimmedEditingTitle = editingTitle.trim();
 
     if (trimmedEditingTitle === todo.title) {
@@ -79,6 +73,14 @@ export const TodoItem: React.FC<Props> = ({
     }
   };
 
+  const handleOnSubmitEditingForm = (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
+    handleUpdateOrDeleteTodo();
+  };
+
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       setEditingTitle(todo.title);
@@ -103,11 +105,7 @@ export const TodoItem: React.FC<Props> = ({
       </label>
 
       {isEditingTitleFormOpened ? (
-        <form
-          onSubmit={event =>
-            handleUpdateTodoOrDeleteIfEditingTextIsEmpty(event)
-          }
-        >
+        <form onSubmit={event => handleOnSubmitEditingForm(event)}>
           <input
             ref={editingTitleInputRef}
             data-cy="TodoTitleField"
@@ -116,7 +114,7 @@ export const TodoItem: React.FC<Props> = ({
             placeholder="Empty todo will be deleted"
             value={editingTitle}
             onChange={event => setEditingTitle(event.target.value.trimStart())}
-            onBlur={() => handleUpdateTodoOrDeleteIfEditingTextIsEmpty()}
+            onBlur={() => handleUpdateOrDeleteTodo()}
             onKeyUp={handleKeyUp}
           />
         </form>
