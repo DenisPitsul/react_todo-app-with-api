@@ -21,16 +21,17 @@ export const TodoItem: React.FC<Props> = ({
   onTodoDelete,
   onTodoUpdate,
 }) => {
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingTitleFormOpened, setIsEditingTitleFormOpened] =
+    useState(false);
   const [editingTitle, setEditingTitle] = useState(todo.title);
   const editingTitleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isEditingTitle) {
+    if (isEditingTitleFormOpened) {
       setEditingTitle(() => todo.title);
       editingTitleInputRef.current?.focus();
     }
-  }, [isEditingTitle, todo.title]);
+  }, [isEditingTitleFormOpened, todo.title]);
 
   const handleChangeTodoStatus = () => {
     if (onTodoUpdate) {
@@ -54,7 +55,7 @@ export const TodoItem: React.FC<Props> = ({
     const trimmedEditingTitle = editingTitle.trim();
 
     if (trimmedEditingTitle === todo.title) {
-      setIsEditingTitle(false);
+      setIsEditingTitleFormOpened(false);
 
       return;
     }
@@ -62,7 +63,7 @@ export const TodoItem: React.FC<Props> = ({
     if (trimmedEditingTitle && onTodoUpdate) {
       onTodoUpdate(todo.id, { title: trimmedEditingTitle })
         .then(() => {
-          setIsEditingTitle(false);
+          setIsEditingTitleFormOpened(false);
         })
         .catch(() => {
           setEditingTitle(todo.title);
@@ -70,7 +71,7 @@ export const TodoItem: React.FC<Props> = ({
     } else if (onTodoDelete) {
       onTodoDelete(todo.id)
         .then(() => {
-          setIsEditingTitle(false);
+          setIsEditingTitleFormOpened(false);
         })
         .catch(() => {
           setEditingTitle(todo.title);
@@ -81,7 +82,7 @@ export const TodoItem: React.FC<Props> = ({
   const handleKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       setEditingTitle(todo.title);
-      setIsEditingTitle(false);
+      setIsEditingTitleFormOpened(false);
     }
   };
 
@@ -89,7 +90,7 @@ export const TodoItem: React.FC<Props> = ({
     <div
       data-cy="Todo"
       className={cn('todo', { completed: todo.completed })}
-      onDoubleClick={() => setIsEditingTitle(true)}
+      onDoubleClick={() => setIsEditingTitleFormOpened(true)}
     >
       <label className="todo__status-label">
         <input
@@ -101,7 +102,7 @@ export const TodoItem: React.FC<Props> = ({
         />
       </label>
 
-      {isEditingTitle ? (
+      {isEditingTitleFormOpened ? (
         <form
           onSubmit={event =>
             handleUpdateTodoOrDeleteIfEditingTextIsEmpty(event)
