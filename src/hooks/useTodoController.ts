@@ -119,7 +119,6 @@ export const useTodoController = () => {
           setTodos(currentTodos =>
             currentTodos.filter(todo => todo.id !== todoId),
           );
-          inputFocusRef.current?.focus();
         })
         .catch(() => {
           setErrorMessage(ErrorMessages.OnDelete);
@@ -128,6 +127,7 @@ export const useTodoController = () => {
         })
         .finally(() => {
           removeTodoFromProcessing(todoId);
+          inputFocusRef.current?.focus();
         });
     },
     [addTodoIdToProcessing, removeTodoFromProcessing],
@@ -163,8 +163,6 @@ export const useTodoController = () => {
       .map(todo => todo.id);
 
     await Promise.all(allCompletedTodoIds.map(id => onTodoDelete(id)));
-
-    inputFocusRef.current?.focus();
   }, [onTodoDelete, todos]);
 
   const onToggleTodos = useCallback(async () => {
